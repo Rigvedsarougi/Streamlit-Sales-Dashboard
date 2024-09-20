@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import matplotlib.pyplot as plt
 
 biolume_df = pd.read_csv('All - All.csv')
 biolume_df['Order Date'] = pd.to_datetime(biolume_df['Order Date'], format='%d-%m-%Y', errors='coerce')
@@ -69,10 +69,15 @@ def generate_sales_report(employee_name):
     st.write(f"Average Monthly New Shop Sales: {avg_new_shop_sales:.2f}")
     st.write(f"Average Monthly Repeated Shop Sales: {avg_repeated_shop_sales:.2f}")
 
-    # Visualizations
+    # Visualizations using matplotlib
     st.write("**Monthly Sales Breakdown**")
-    fig = px.bar(final_report, x='Year-Month', y='total_sales', title="Monthly Total Sales", labels={'total_sales': 'Total Sales'}, text_auto=True)
-    st.plotly_chart(fig)
+    fig, ax = plt.subplots()
+    ax.bar(final_report['Year-Month'].astype(str), final_report['total_sales'], color='blue')
+    ax.set_title('Monthly Total Sales')
+    ax.set_xlabel('Year-Month')
+    ax.set_ylabel('Total Sales')
+    plt.xticks(rotation=45)
+    st.pyplot(fig)
 
     # 2nd Table: Month-wise New and Repeated Shop Names
     st.write("**Month-wise New and Repeated Shop Names with Order Values**")
