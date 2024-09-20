@@ -35,21 +35,21 @@ def generate_sales_report(employee_name):
         total_sales=('Order Value', 'sum'),    # Total sales for the month
     ).reset_index()
 
-    # Calculate total order value for new and repeated shops
-    new_shop_sales = new_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='new_shop_sales')
-    repeated_shop_sales = unique_orders_after_first.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_shop_sales')
-
-    # Count the number of repeated shops per month (excluding the first month of each shop)
+    # Count the number of repeated shops per month
     repeated_shops_per_month = unique_orders_after_first.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='repeated_shops')
 
     # Count the number of new shops per month
     new_shops_per_month = new_shops.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='new_shops')
 
+    # Calculate the order value for repeated and new shops
+    repeated_shop_order_value = unique_orders_after_first.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_order_value')
+    new_shop_order_value = new_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='new_order_value')
+
     # Merge all results into a single report
     final_report = pd.merge(report, repeated_shops_per_month, on='Year-Month', how='left')
     final_report = pd.merge(final_report, new_shops_per_month, on='Year-Month', how='left')
-    final_report = pd.merge(final_report, new_shop_sales, on='Year-Month', how='left')
-    final_report = pd.merge(final_report, repeated_shop_sales, on='Year-Month', how='left')
+    final_report = pd.merge(final_report, repeated_shop_order_value, on='Year-Month', how='left')
+    final_report = pd.merge(final_report, new_shop_order_value, on='Year-Month', how='left')
 
     # Fill NaN values with 0 (for months where no new or repeated shops exist)
     final_report.fillna(0, inplace=True)
@@ -57,47 +57,41 @@ def generate_sales_report(employee_name):
     # Calculate average monthly sales
     avg_monthly_sales = final_report['total_sales'].mean()
 
-    # 1st Table: Monthly Sales, Average Monthly Sale, Total Sales
+    # Calculate total and average monthly order value for repeated and new shops
+    total_repeated_order_value = final_report['repeated_order_value'].sum()
+    avg_repeated_order_value = final_report['repeated_order_value'].mean()
+
+    total_new_order_value = final_report['new_order_value'].sum()
+    avg_new_order_value = final_report['new_order_value'].mean()
+
+    # 1st Table: Monthly Sales, Total Sales, and Order Values for Repeated and New Shops
     st.write(f"Sales Report for Employee: {employee_name}")
     st.write("**Monthly Sales of Every Month, Average Monthly Sale, Total Sales of Total Shops, Repeated Shops, New Shops, and Order Values**")
-    st.table(final_report[['Year-Month', 'total_shops', 'total_sales', 'repeated_shops', 'new_shops', 'repeated_shop_sales', 'new_shop_sales']])
+    st.table(final_report[['Year-Month', 'total_shops', 'total_sales', 'repeated_shops', 'new_shops', 'repeated_order_value', 'new_order_value']])
+    
+    # Display total and average values
     st.write(f"Average Monthly Sales: {avg_monthly_sales:.2f}")
     st.write(f"Total Sales: {final_report['total_sales'].sum():.2f}")
-
-    # Calculate total and average monthly order value for repeated and new shops
-    total_new_shop_sales = final_report['new_shop_sales'].sum()
-    avg_new_shop_sales = final_report['new_shop_sales'].mean()
-    
-    total_repeated_shop_sales = final_report['repeated_shop_sales'].sum()
-    avg_repeated_shop_sales = final_report['repeated_shop_sales'].mean()
-    
-    st.write(f"Total New Shop Sales: {total_new_shop_sales:.2f}")
-    st.write(f"Average Monthly New Shop Sales: {avg_new_shop_sales:.2f}")
-    st.write(f"Total Repeated Shop Sales: {total_repeated_shop_sales:.2f}")
-    st.write(f"Average Monthly Repeated Shop Sales: {avg_repeated_shop_sales:.2f}")
+    st.write(f"Total Repeated Order Value: {total_repeated_order_value:.2f}")
+    st.write(f"Average Repeated Order Value: {avg_repeated_order_value:.2f}")
+    st.write(f"Total New Order Value: {total_new_order_value:.2f}")
+    st.write(f"Average New Order Value: {avg_new_order_value:.2f}")
 
     # 2nd Table: Month-wise New and Repeated Shop Names with Order Values
     st.write("**Month-wise New and Repeated Shop Names with Order Values**")
 
     # Get new shop names and their order values per month
-    new_shops_list = new_shops.groupby('Year-Month').apply(
-        lambda x: pd.DataFrame({'new_shops': list(x['Shop Name']),
-                                'new_shop_sales': list(x['Order Value'])})
-    ).reset_index()
+    new_shops_list = new_shops.groupby('Year-Month').apply(lambda x: pd.DataFrame({'Shop Name': x['Shop Name'], 'Order Value': x['Order Value']})).reset_index(level=0)
 
     # Get repeated shop names and their order values per month
-    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').apply(
-        lambda x: pd.DataFrame({'repeated_shops': list(x['Shop Name']),
-                                'repeated_shop_sales': list(x['Order Value'])})
-    ).reset_index()
+    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').apply(lambda x: pd.DataFrame({'Shop Name': x['Shop Name'], 'Order Value': x['Order Value']})).reset_index(level=0)
 
-    # Merge the two lists (new and repeated) by 'Year-Month'
-    month_wise_shops_report = pd.merge(new_shops_list, repeated_shops_list, on='Year-Month', how='outer', suffixes=('_new', '_repeated'))
-
-    # Fill NaN with empty lists if no shops are available for that month
-    month_wise_shops_report.fillna({'new_shops': [], 'new_shop_sales': [], 'repeated_shops': [], 'repeated_shop_sales': []}, inplace=True)
-
-    st.table(month_wise_shops_report)
+    # Show the new and repeated shop names with their respective order values
+    st.write("**New Shops and Order Values**")
+    st.table(new_shops_list)
+    
+    st.write("**Repeated Shops and Order Values**")
+    st.table(repeated_shops_list)
 
 # Streamlit App UI
 st.title("Employee Sales Report")
