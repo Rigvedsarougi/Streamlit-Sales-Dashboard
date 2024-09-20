@@ -79,14 +79,14 @@ def generate_sales_report(employee_name):
     # 2nd Table: Month-wise New and Repeated Shop Names with Order Values
     st.write("**Month-wise New and Repeated Shop Names with Order Values**")
 
-    # Get new shop names and order values per month
-    new_shops_list = new_shops.groupby('Year-Month').apply(lambda x: pd.DataFrame({'new_shops': x['Shop Name'], 'new_shop_sales': x['Order Value']})).reset_index(level=0, drop=True).reset_index()
+    # Get new shop names and their order values per month
+    new_shops_list = new_shops.groupby('Year-Month').apply(lambda x: x[['Shop Name', 'Order Value']].rename(columns={'Shop Name': 'new_shops', 'Order Value': 'new_shop_sales'})).reset_index(level=0, drop=True)
 
-    # Get repeated shop names and order values per month
-    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').apply(lambda x: pd.DataFrame({'repeated_shops': x['Shop Name'], 'repeated_shop_sales': x['Order Value']})).reset_index(level=0, drop=True).reset_index()
+    # Get repeated shop names and their order values per month
+    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').apply(lambda x: x[['Shop Name', 'Order Value']].rename(columns={'Shop Name': 'repeated_shops', 'Order Value': 'repeated_shop_sales'})).reset_index(level=0, drop=True)
 
     # Merge new and repeated shop names with order values into one table
-    shops_names_report = pd.merge(new_shops_list, repeated_shops_list, on='Year-Month', how='outer').fillna('[]')
+    shops_names_report = pd.concat([new_shops_list, repeated_shops_list], axis=1)
 
     st.table(shops_names_report)
 
