@@ -81,21 +81,21 @@ def generate_sales_report(employee_name):
     metric_style = "<p style='font-size: 14px;'>%s</p>"
     
     # Total Sales
-    col1.markdown(metric_style % f"**Total Sales:** {final_report['total_sales'].sum():,.2f}", unsafe_allow_html=True)
+    col1.markdown(metric_style % f"Total Sales: {final_report['total_sales'].sum():,.2f}", unsafe_allow_html=True)
     # Avg Monthly Sales
-    col2.markdown(metric_style % f"**Avg Monthly Sales:** {avg_monthly_sales:,.2f}", unsafe_allow_html=True)
+    col2.markdown(metric_style % f"Avg Monthly Sales: {avg_monthly_sales:,.2f}", unsafe_allow_html=True)
     
     # Total Repeated Order Value
-    col3.markdown(metric_style % f"**Total Repeated Order Value:** {total_repeated_order_value:,.2f}", unsafe_allow_html=True)
+    col3.markdown(metric_style % f"Total Repeated Order Value: {total_repeated_order_value:,.2f}", unsafe_allow_html=True)
     # Avg Repeated Order Value
     avg_repeated_order_value = total_repeated_order_value / len(final_report)
-    col4.markdown(metric_style % f"**Avg Repeated Order Value:** {avg_repeated_order_value:,.2f}", unsafe_allow_html=True)
+    col4.markdown(metric_style % f"Avg Repeated Order Value: {avg_repeated_order_value:,.2f}", unsafe_allow_html=True)
     
     # Total New Order Value
-    col5.markdown(metric_style % f"**Total New Order Value:** {total_new_order_value:,.2f}", unsafe_allow_html=True)
+    col5.markdown(metric_style % f"Total New Order Value: {total_new_order_value:,.2f}", unsafe_allow_html=True)
     # Avg New Order Value
     avg_new_order_value = total_new_order_value / len(final_report)
-    col6.markdown(metric_style % f"**Avg New Order Value:** {avg_new_order_value:,.2f}", unsafe_allow_html=True)
+    col6.markdown(metric_style % f"Avg New Order Value: {avg_new_order_value:,.2f}", unsafe_allow_html=True)
 
 
     # 2nd Section: Bar Chart for Total Sales
