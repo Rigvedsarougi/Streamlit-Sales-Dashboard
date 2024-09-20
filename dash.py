@@ -71,18 +71,31 @@ def generate_sales_report(employee_name):
     st.write(f"### Sales Report for Employee: {employee_name}")
 
     # 1st Section: KPI Metrics
+    # 1st Section: KPI Metrics
     st.markdown("<h4 style='font-size: 18px;'>Key Performance Indicators</h4>", unsafe_allow_html=True)
     
     # Create columns for KPIs
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     
     # Set a smaller font size for metrics
     metric_style = "<p style='font-size: 14px;'>%s</p>"
     
-    col1.markdown(metric_style % f"Total Sales: {final_report['total_sales'].sum():,.2f}", unsafe_allow_html=True)
-    col2.markdown(metric_style % f"Avg Monthly Sales: {avg_monthly_sales:,.2f}", unsafe_allow_html=True)
-    col3.markdown(metric_style % f"Total Repeated Order Value: {total_repeated_order_value:,.2f}", unsafe_allow_html=True)
-    col4.markdown(metric_style % f"Total New Order Value: {total_new_order_value:,.2f}", unsafe_allow_html=True)
+    # Total Sales
+    col1.markdown(metric_style % f"**Total Sales:** {final_report['total_sales'].sum():,.2f}", unsafe_allow_html=True)
+    # Avg Monthly Sales
+    col2.markdown(metric_style % f"**Avg Monthly Sales:** {avg_monthly_sales:,.2f}", unsafe_allow_html=True)
+    
+    # Total Repeated Order Value
+    col3.markdown(metric_style % f"**Total Repeated Order Value:** {total_repeated_order_value:,.2f}", unsafe_allow_html=True)
+    # Avg Repeated Order Value
+    avg_repeated_order_value = total_repeated_order_value / len(final_report)
+    col4.markdown(metric_style % f"**Avg Repeated Order Value:** {avg_repeated_order_value:,.2f}", unsafe_allow_html=True)
+    
+    # Total New Order Value
+    col5.markdown(metric_style % f"**Total New Order Value:** {total_new_order_value:,.2f}", unsafe_allow_html=True)
+    # Avg New Order Value
+    avg_new_order_value = total_new_order_value / len(final_report)
+    col6.markdown(metric_style % f"**Avg New Order Value:** {avg_new_order_value:,.2f}", unsafe_allow_html=True)
 
 
     # 2nd Section: Bar Chart for Total Sales
