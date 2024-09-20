@@ -5,7 +5,6 @@ import plotly.express as px
 biolume_df = pd.read_csv('All - All.csv')
 biolume_df['Order Date'] = pd.to_datetime(biolume_df['Order Date'], format='%d-%m-%Y', errors='coerce')
 
-# Function to generate the sales report
 def generate_sales_report(employee_name):
     # Filter data by Employee Name
     filtered_df = biolume_df[biolume_df['Employee Name'] == employee_name]
@@ -14,8 +13,11 @@ def generate_sales_report(employee_name):
         st.write(f"No data found for employee: {employee_name}")
         return
 
-    # Extract the year-month for easier grouping
-    filtered_df['Year-Month'] = filtered_df['Order Date'].dt.to_period('M')
+    filtered_df['Order Date'] = pd.to_datetime(filtered_df['Order Date'], format='%d-%m-%Y', errors='coerce')
+    
+    filtered_df['Year-Month'] = filtered_df['Order Date'].dt.to_period('M').astype(str)
+
+
 
     # Find the first order date (month) for each shop
     first_order_date = filtered_df.groupby('Shop Name')['Order Date'].min().reset_index()
