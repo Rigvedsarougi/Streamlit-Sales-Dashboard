@@ -79,10 +79,10 @@ def generate_sales_report(employee_name):
     # Set a smaller font size for metrics
     metric_style = "<p style='font-size: 14px;'>%s</p>"
     
-    col1.markdown(metric_style % f"**Total Sales:** {final_report['total_sales'].sum():,.2f}", unsafe_allow_html=True)
-    col2.markdown(metric_style % f"**Avg Monthly Sales:** {avg_monthly_sales:,.2f}", unsafe_allow_html=True)
-    col3.markdown(metric_style % f"**Total Repeated Order Value:** {total_repeated_order_value:,.2f}", unsafe_allow_html=True)
-    col4.markdown(metric_style % f"**Total New Order Value:** {total_new_order_value:,.2f}", unsafe_allow_html=True)
+    col1.markdown(metric_style % f"Total Sales: {final_report['total_sales'].sum():,.2f}", unsafe_allow_html=True)
+    col2.markdown(metric_style % f"Avg Monthly Sales: {avg_monthly_sales:,.2f}", unsafe_allow_html=True)
+    col3.markdown(metric_style % f"Total Repeated Order Value: {total_repeated_order_value:,.2f}", unsafe_allow_html=True)
+    col4.markdown(metric_style % f"Total New Order Value: {total_new_order_value:,.2f}", unsafe_allow_html=True)
 
 
     # 2nd Section: Bar Chart for Total Sales
