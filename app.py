@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 
 biolume_df = pd.read_csv('All - All.csv')
 biolume_df['Order Date'] = pd.to_datetime(biolume_df['Order Date'], format='%d-%m-%Y', errors='coerce')
@@ -36,15 +35,15 @@ def generate_sales_report(employee_name):
         total_sales=('Order Value', 'sum'),    # Total sales for the month
     ).reset_index()
 
+    # Calculate total order value for new and repeated shops
+    new_shop_sales = new_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='new_shop_sales')
+    repeated_shop_sales = unique_orders_after_first.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_shop_sales')
+
     # Count the number of repeated shops per month (excluding the first month of each shop)
     repeated_shops_per_month = unique_orders_after_first.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='repeated_shops')
 
     # Count the number of new shops per month
     new_shops_per_month = new_shops.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='new_shops')
-
-    # Order values for repeated and new shops
-    new_shop_sales = new_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='new_shop_sales')
-    repeated_shop_sales = unique_orders_after_first.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_shop_sales')
 
     # Merge all results into a single report
     final_report = pd.merge(report, repeated_shops_per_month, on='Year-Month', how='left')
@@ -57,47 +56,39 @@ def generate_sales_report(employee_name):
 
     # Calculate average monthly sales
     avg_monthly_sales = final_report['total_sales'].mean()
-    avg_new_shop_sales = final_report['new_shop_sales'].mean()
-    avg_repeated_shop_sales = final_report['repeated_shop_sales'].mean()
 
     # 1st Table: Monthly Sales, Average Monthly Sale, Total Sales
     st.write(f"Sales Report for Employee: {employee_name}")
-    st.write("**Monthly Sales of Every Month, Average Monthly Sale, Total Sales of Total Shops, Repeated Shops, and New Shops**")
-    st.table(final_report[['Year-Month', 'total_shops', 'total_sales', 'new_shop_sales', 'repeated_shop_sales', 'repeated_shops', 'new_shops']])
+    st.write("**Monthly Sales of Every Month, Average Monthly Sale, Total Sales of Total Shops, Repeated Shops, New Shops, and Order Values**")
+    st.table(final_report[['Year-Month', 'total_shops', 'total_sales', 'repeated_shops', 'new_shops', 'repeated_shop_sales', 'new_shop_sales']])
     st.write(f"Average Monthly Sales: {avg_monthly_sales:.2f}")
     st.write(f"Total Sales: {final_report['total_sales'].sum():.2f}")
+
+    # Calculate total and average monthly order value for repeated and new shops
+    total_new_shop_sales = final_report['new_shop_sales'].sum()
+    avg_new_shop_sales = final_report['new_shop_sales'].mean()
+    
+    total_repeated_shop_sales = final_report['repeated_shop_sales'].sum()
+    avg_repeated_shop_sales = final_report['repeated_shop_sales'].mean()
+    
+    st.write(f"Total New Shop Sales: {total_new_shop_sales:.2f}")
     st.write(f"Average Monthly New Shop Sales: {avg_new_shop_sales:.2f}")
+    st.write(f"Total Repeated Shop Sales: {total_repeated_shop_sales:.2f}")
     st.write(f"Average Monthly Repeated Shop Sales: {avg_repeated_shop_sales:.2f}")
 
-    # Visualizations using matplotlib
-    st.write("**Monthly Sales Breakdown**")
-    fig, ax = plt.subplots()
-    ax.bar(final_report['Year-Month'].astype(str), final_report['total_sales'], color='blue')
-    ax.set_title('Monthly Total Sales')
-    ax.set_xlabel('Year-Month')
-    ax.set_ylabel('Total Sales')
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
-
-    # 2nd Table: Month-wise New and Repeated Shop Names
+    # 2nd Table: Month-wise New and Repeated Shop Names with Order Values
     st.write("**Month-wise New and Repeated Shop Names with Order Values**")
 
-    # Get new shop names and their order values per month
-    new_shops_list = new_shops.groupby('Year-Month').agg(
-        new_shops=('Shop Name', lambda x: list(set(x))),
-        new_shop_value=('Order Value', 'sum')
-    ).reset_index()
+    # Get new shop names and order values per month
+    new_shops_list = new_shops.groupby('Year-Month').apply(lambda x: pd.DataFrame({'new_shops': x['Shop Name'], 'new_shop_sales': x['Order Value']})).reset_index(level=0, drop=True).reset_index()
 
-    # Get repeated shop names and their order values per month
-    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').agg(
-        repeated_shops=('Shop Name', lambda x: list(set(x))),
-        repeated_shop_value=('Order Value', 'sum')
-    ).reset_index()
+    # Get repeated shop names and order values per month
+    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').apply(lambda x: pd.DataFrame({'repeated_shops': x['Shop Name'], 'repeated_shop_sales': x['Order Value']})).reset_index(level=0, drop=True).reset_index()
 
-    # Merge new and repeated shop names and order values into one table
-    shops_names_report = pd.merge(new_shops_list, repeated_shops_list, on='Year-Month', how='outer').fillna({'new_shops': [], 'repeated_shops': [], 'new_shop_value': 0, 'repeated_shop_value': 0})
+    # Merge new and repeated shop names with order values into one table
+    shops_names_report = pd.merge(new_shops_list, repeated_shops_list, on='Year-Month', how='outer').fillna('[]')
 
-    st.table(shops_names_report[['Year-Month', 'new_shops', 'new_shop_value', 'repeated_shops', 'repeated_shop_value']])
+    st.table(shops_names_report)
 
 # Streamlit App UI
 st.title("Employee Sales Report")
