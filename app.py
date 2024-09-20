@@ -80,15 +80,24 @@ def generate_sales_report(employee_name):
     st.write("**Month-wise New and Repeated Shop Names with Order Values**")
 
     # Get new shop names and their order values per month
-    new_shops_list = new_shops.groupby('Year-Month').apply(lambda x: x[['Shop Name', 'Order Value']].rename(columns={'Shop Name': 'new_shops', 'Order Value': 'new_shop_sales'})).reset_index(level=0, drop=True)
+    new_shops_list = new_shops.groupby('Year-Month').apply(
+        lambda x: pd.DataFrame({'new_shops': list(x['Shop Name']),
+                                'new_shop_sales': list(x['Order Value'])})
+    ).reset_index()
 
     # Get repeated shop names and their order values per month
-    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').apply(lambda x: x[['Shop Name', 'Order Value']].rename(columns={'Shop Name': 'repeated_shops', 'Order Value': 'repeated_shop_sales'})).reset_index(level=0, drop=True)
+    repeated_shops_list = unique_orders_after_first.groupby('Year-Month').apply(
+        lambda x: pd.DataFrame({'repeated_shops': list(x['Shop Name']),
+                                'repeated_shop_sales': list(x['Order Value'])})
+    ).reset_index()
 
-    # Merge new and repeated shop names with order values into one table
-    shops_names_report = pd.concat([new_shops_list, repeated_shops_list], axis=1)
+    # Merge the two lists (new and repeated) by 'Year-Month'
+    month_wise_shops_report = pd.merge(new_shops_list, repeated_shops_list, on='Year-Month', how='outer', suffixes=('_new', '_repeated'))
 
-    st.table(shops_names_report)
+    # Fill NaN with empty lists if no shops are available for that month
+    month_wise_shops_report.fillna({'new_shops': [], 'new_shop_sales': [], 'repeated_shops': [], 'repeated_shop_sales': []}, inplace=True)
+
+    st.table(month_wise_shops_report)
 
 # Streamlit App UI
 st.title("Employee Sales Report")
