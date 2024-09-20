@@ -71,12 +71,19 @@ def generate_sales_report(employee_name):
     st.write(f"### Sales Report for Employee: {employee_name}")
 
     # 1st Section: KPI Metrics
-    st.markdown("#### Key Performance Indicators")
+    st.markdown("<h4 style='font-size: 18px;'>Key Performance Indicators</h4>", unsafe_allow_html=True)
+    
+    # Create columns for KPIs
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Sales", f"{final_report['total_sales'].sum():,.2f}")
-    col2.metric("Avg Monthly Sales", f"{avg_monthly_sales:,.2f}")
-    col3.metric("Total Repeated Order Value", f"{total_repeated_order_value:,.2f}")
-    col4.metric("Total New Order Value", f"{total_new_order_value:,.2f}")
+    
+    # Set a smaller font size for metrics
+    metric_style = "<p style='font-size: 14px;'>%s</p>"
+    
+    col1.markdown(metric_style % f"**Total Sales:** {final_report['total_sales'].sum():,.2f}", unsafe_allow_html=True)
+    col2.markdown(metric_style % f"**Avg Monthly Sales:** {avg_monthly_sales:,.2f}", unsafe_allow_html=True)
+    col3.markdown(metric_style % f"**Total Repeated Order Value:** {total_repeated_order_value:,.2f}", unsafe_allow_html=True)
+    col4.markdown(metric_style % f"**Total New Order Value:** {total_new_order_value:,.2f}", unsafe_allow_html=True)
+
 
     # 2nd Section: Bar Chart for Total Sales
     st.markdown("#### Monthly Total Sales")
