@@ -10,7 +10,7 @@ def load_data():
     df['Year-Month'] = df['Order Date'].dt.to_period('M').astype(str)
     return df
 
-# Generate Sales Report with column existence check
+# Generate Sales Report with detailed checks
 def generate_sales_report(df, employee_name):
     filtered_df = df[df['Employee Name'] == employee_name]
     
@@ -18,15 +18,23 @@ def generate_sales_report(df, employee_name):
         st.write(f"No data found for employee: {employee_name}")
         return None, None
     
-    # Fixing the column renaming issue during the merge
+    # Step 1: Check the filtered dataframe
+    st.write("Filtered DataFrame (Sample):", filtered_df.head())
+
+    # Step 2: Group to get first order date
     first_order_date = filtered_df.groupby('Shop Name')['Order Date'].min().reset_index()
     first_order_date.rename(columns={'Order Date': 'First Order Date'}, inplace=True)  # Renaming for clarity
-    
+
+    # Step 3: Check the first_order_date dataframe
+    st.write("First Order Date DataFrame (Sample):", first_order_date.head())
+
+    # Step 4: Perform the merge
     merged_df = pd.merge(filtered_df, first_order_date, on='Shop Name', how='left')
 
-    # Debugging - check if the merge happened correctly
-    st.write("Merged DataFrame Columns:", merged_df.columns)
-    
+    # Step 5: Check the merged_df
+    st.write("Merged DataFrame (Columns):", merged_df.columns)
+    st.write("Merged DataFrame (Sample):", merged_df.head())
+
     if 'First Order Date' not in merged_df.columns:
         st.write("Error: 'First Order Date' column not found after merge.")
         return None, None
@@ -63,46 +71,6 @@ def generate_sales_report(df, employee_name):
     
     return final_report, filtered_df
 
-# Display KPIs
-def display_kpis(final_report):
-    st.markdown("<h4 style='font-size: 18px;'>Key Performance Indicators</h4>", unsafe_allow_html=True)
-    
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    
-    col1.metric("Total Sales", f"{final_report['total_sales'].sum():,.2f}")
-    col2.metric("Avg Monthly Sales", f"{final_report['total_sales'].mean():,.2f}")
-    col3.metric("Total Repeated Order Value", f"{final_report['repeated_order_value'].sum():,.2f}")
-    col4.metric("Avg Repeated Order Value", f"{final_report['repeated_order_value'].mean():,.2f}")
-    col5.metric("Total New Order Value", f"{final_report['new_order_value'].sum():,.2f}")
-    col6.metric("Avg New Order Value", f"{final_report['new_order_value'].mean():,.2f}")
-
-# Display Charts
-def display_charts(final_report):
-    st.markdown("#### Monthly Total Sales")
-    fig1 = px.bar(final_report, x='Year-Month', y='total_sales', title="Total Sales Per Month")
-    st.plotly_chart(fig1, use_container_width=True)
-
-    st.markdown("#### Monthly Repeated and New Shop Order Values")
-    fig2 = px.bar(final_report, x='Year-Month', y=['repeated_order_value', 'new_order_value'],
-                  title="Repeated and New Shop Order Values", barmode='group')
-    st.plotly_chart(fig2, use_container_width=True)
-
-# Display Tables
-def display_tables(final_report, filtered_df):
-    # New Shops Grouped Table
-    new_shops_grouped = filtered_df[filtered_df['Order Date'] == filtered_df['First Order Date']].groupby(
-        ['Year-Month', 'Shop Name']).agg(total_order_value=('Order Value', 'sum')).reset_index()
-
-    # Repeated Shops Grouped Table
-    repeated_shops_grouped = filtered_df.groupby(['Year-Month', 'Shop Name']).agg(
-        total_order_value=('Order Value', 'sum')).reset_index()
-
-    st.markdown("**New Shops and Their Total Order Values**")
-    st.dataframe(new_shops_grouped)
-    
-    st.markdown("**Repeated Shops and Their Total Order Values**")
-    st.dataframe(repeated_shops_grouped)
-
 # Streamlit App
 st.title("Employee Sales Dashboard")
 
@@ -118,6 +86,4 @@ if st.button('Generate Report'):
     final_report, filtered_df = generate_sales_report(df, selected_employee)
     
     if final_report is not None:
-        display_kpis(final_report)
-        display_charts(final_report)
-        display_tables(final_report, filtered_df)
+        st.write("Final Report (Sample):", final_report.head())
