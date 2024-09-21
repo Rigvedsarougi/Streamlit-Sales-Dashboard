@@ -10,7 +10,7 @@ def load_data():
     df['Year-Month'] = df['Order Date'].dt.to_period('M').astype(str)
     return df
 
-# Generate Sales Report with fixed column renaming
+# Generate Sales Report with column existence check
 def generate_sales_report(df, employee_name):
     filtered_df = df[df['Employee Name'] == employee_name]
     
@@ -22,7 +22,14 @@ def generate_sales_report(df, employee_name):
     first_order_date = filtered_df.groupby('Shop Name')['Order Date'].min().reset_index()
     first_order_date.rename(columns={'Order Date': 'First Order Date'}, inplace=True)  # Renaming for clarity
     
-    merged_df = pd.merge(filtered_df, first_order_date, on='Shop Name')
+    merged_df = pd.merge(filtered_df, first_order_date, on='Shop Name', how='left')
+
+    # Debugging - check if the merge happened correctly
+    st.write("Merged DataFrame Columns:", merged_df.columns)
+    
+    if 'First Order Date' not in merged_df.columns:
+        st.write("Error: 'First Order Date' column not found after merge.")
+        return None, None
     
     # Identifying new shops
     new_shops = merged_df[merged_df['Order Date'] == merged_df['First Order Date']]
