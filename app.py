@@ -22,8 +22,12 @@ def generate_sales_report(employee_name):
     # Merge the first order date back with the original dataframe
     merged_df = pd.merge(filtered_df, first_order_date, on='Shop Name', suffixes=('', '_first'))
 
-    # Identify new shops: where the order date matches their first order date (only for the same month)
-    merged_df['Is_New_Shop'] = (merged_df['Order Date'].dt.to_period('M') == merged_df['Order Date_first'].dt.to_period('M'))
+    # Identify new shops: where the order date matches their first order date
+    new_shops = merged_df[merged_df['Order Date'] == merged_df['Order Date_first']]
+
+    # Identify repeated shops: shops with more than one unique order
+    unique_orders = filtered_df.drop_duplicates(subset=['Shop Name', 'Order Date'])
+    unique_orders_after_first = unique_orders[unique_orders['Year-Month'] > unique_orders['Shop Name'].map(first_order_date.set_index('Shop Name')['Order Date'].dt.to_period('M'))]
 
     # Generate the report for total, repeated, and new shops
     report = filtered_df.groupby('Year-Month').agg(
@@ -31,19 +35,15 @@ def generate_sales_report(employee_name):
         total_sales=('Order Value', 'sum'),    # Total sales for the month
     ).reset_index()
 
-    # Identify repeated shops: shops with more than one unique order
-    unique_orders = filtered_df.drop_duplicates(subset=['Shop Name', 'Order Date'])
-    unique_orders_after_first = unique_orders[unique_orders['Year-Month'] > unique_orders['Shop Name'].map(first_order_date.set_index('Shop Name')['Order Date'].dt.to_period('M'))]
-
     # Count the number of repeated shops per month
     repeated_shops_per_month = unique_orders_after_first.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='repeated_shops')
 
-    # Count the number of new shops per month by summing the sales of shops that are new in that month
-    new_shops_per_month = merged_df[merged_df['Is_New_Shop']].groupby('Year-Month')['Shop Name'].nunique().reset_index(name='new_shops')
+    # Count the number of new shops per month
+    new_shops_per_month = new_shops.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='new_shops')
 
     # Calculate the order value for repeated and new shops
     repeated_shop_order_value = unique_orders_after_first.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_order_value')
-    new_shop_order_value = merged_df[merged_df['Is_New_Shop']].groupby('Year-Month')['Order Value'].sum().reset_index(name='new_order_value')
+    new_shop_order_value = new_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='new_order_value')
 
     # Merge all results into a single report
     final_report = pd.merge(report, repeated_shops_per_month, on='Year-Month', how='left')
@@ -80,7 +80,7 @@ def generate_sales_report(employee_name):
     # 2nd Table: Month-wise New and Repeated Shop Names with Total Order Values
 
     # Get new shop names and their total order values per month
-    new_shops_grouped = merged_df[merged_df['Is_New_Shop']].groupby(['Year-Month', 'Shop Name']).agg(
+    new_shops_grouped = new_shops.groupby(['Year-Month', 'Shop Name']).agg(
         total_order_value=('Order Value', 'sum')
     ).reset_index()
 
@@ -95,7 +95,6 @@ def generate_sales_report(employee_name):
 
     st.write("**Repeated Shops and Their Total Order Values**")
     st.table(repeated_shops_grouped)
-
 
 # Streamlit App UI
 st.title("Employee Sales Report")
