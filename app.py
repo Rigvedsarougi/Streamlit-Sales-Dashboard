@@ -78,21 +78,21 @@ def generate_sales_report(employee_name):
     st.write(f"Average New Order Value: {avg_new_order_value:.2f}")
 
     # 2nd Table: Month-wise New and Repeated Shop Names with Total Order Values
-
-    # Get new shop names and their total order values per month
+    
+    # Get new shop names and sum their total order values per month
     new_shops_grouped = merged_df[merged_df['Is_New_Shop']].groupby(['Year-Month', 'Shop Name']).agg(
         total_order_value=('Order Value', 'sum')
     ).reset_index()
-
-    # Get repeated shop names and their total order values per month
+    
+    # Get repeated shop names and sum their total order values per month
     repeated_shops_grouped = unique_orders_after_first.groupby(['Year-Month', 'Shop Name']).agg(
         total_order_value=('Order Value', 'sum')
     ).reset_index()
-
+    
     # Display new and repeated shop names with their total order values
     st.write("**New Shops and Their Total Order Values**")
     st.table(new_shops_grouped)
-
+    
     st.write("**Repeated Shops and Their Total Order Values**")
     st.table(repeated_shops_grouped)
 
