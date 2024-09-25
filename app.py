@@ -42,7 +42,7 @@ def generate_sales_report(employee_name):
     new_shops_per_month = new_shops.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='new_shops')
 
     # Calculate the order value for repeated and new shops
-    repeated_shop_order_value = unique_orders_after_first.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_order_value')
+    repeated_shop_order_value = unique_orders_after_first.groupby(['Year-Month', 'Shop Name'])['Order Value'].sum().reset_index(name='repeated_order_value')
     new_shop_order_value = new_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='new_order_value')
 
     # Merge all results into a single report
@@ -88,6 +88,7 @@ def generate_sales_report(employee_name):
     repeated_shops_grouped = unique_orders_after_first.groupby(['Year-Month', 'Shop Name']).agg(
         total_order_value=('Order Value', 'sum')
     ).reset_index()
+    
 
     # Display new and repeated shop names with their total order values
     st.write("**New Shops and Their Total Order Values**")
