@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+# Load the data
 biolume_df = pd.read_csv('All - All.csv')
 biolume_df['Order Date'] = pd.to_datetime(biolume_df['Order Date'], format='%d-%m-%Y', errors='coerce')
 
@@ -25,9 +26,8 @@ def generate_sales_report(employee_name):
     # Identify new shops: where the order date matches their first order date
     new_shops = merged_df[merged_df['Order Date'] == merged_df['Order Date_first']]
 
-    # Identify repeated shops: shops with more than one unique order
-    unique_orders = filtered_df.drop_duplicates(subset=['Shop Name', 'Order Date'])
-    unique_orders_after_first = unique_orders[unique_orders['Year-Month'] > unique_orders['Shop Name'].map(first_order_date.set_index('Shop Name')['Order Date'].dt.to_period('M'))]
+    # Identify repeated shops: where the order date is later than their first order date
+    repeated_shops = merged_df[merged_df['Order Date'] > merged_df['Order Date_first']]
 
     # Generate the report for total, repeated, and new shops
     report = filtered_df.groupby('Year-Month').agg(
@@ -36,13 +36,13 @@ def generate_sales_report(employee_name):
     ).reset_index()
 
     # Count the number of repeated shops per month
-    repeated_shops_per_month = unique_orders_after_first.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='repeated_shops')
+    repeated_shops_per_month = repeated_shops.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='repeated_shops')
 
     # Count the number of new shops per month
     new_shops_per_month = new_shops.groupby('Year-Month')['Shop Name'].nunique().reset_index(name='new_shops')
 
     # Calculate the order value for repeated and new shops
-    repeated_shop_order_value = unique_orders_after_first.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_order_value')
+    repeated_shop_order_value = repeated_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='repeated_order_value')
     new_shop_order_value = new_shops.groupby('Year-Month')['Order Value'].sum().reset_index(name='new_order_value')
 
     # Merge all results into a single report
@@ -84,8 +84,8 @@ def generate_sales_report(employee_name):
         total_order_value=('Order Value', 'sum')
     ).reset_index()
 
-    # Get repeated shop names and their total order values per month (Fix applied here)
-    repeated_shops_grouped = unique_orders_after_first.groupby(['Year-Month', 'Shop Name']).agg(
+    # Get repeated shop names and their total order values per month
+    repeated_shops_grouped = repeated_shops.groupby(['Year-Month', 'Shop Name']).agg(
         total_order_value=('Order Value', 'sum')
     ).reset_index()
 
