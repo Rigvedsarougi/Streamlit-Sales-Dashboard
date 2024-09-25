@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+# Load data and convert 'Order Date' to datetime
 biolume_df = pd.read_csv('All - All.csv')
 biolume_df['Order Date'] = pd.to_datetime(biolume_df['Order Date'], format='%d-%m-%Y', errors='coerce')
 
@@ -27,7 +28,7 @@ def generate_sales_report(employee_name):
 
     # Identify repeated shops: shops with more than one unique order
     unique_orders = filtered_df.drop_duplicates(subset=['Shop Name', 'Order Date'])
-    unique_orders_after_first = unique_orders[unique_orders['Year-Month'] > unique_orders['Shop Name'].map(first_order_date.set_index('Shop Name')['Order Date'].dt.to_period('M'))]
+    unique_orders_after_first = unique_orders[unique_orders['Order Date'] > unique_orders['Shop Name'].map(first_order_date.set_index('Shop Name')['Order Date'])]
 
     # Generate the report for total, repeated, and new shops
     report = filtered_df.groupby('Year-Month').agg(
