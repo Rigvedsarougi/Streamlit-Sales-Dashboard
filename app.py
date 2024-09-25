@@ -3,6 +3,8 @@ import pandas as pd
 
 # Load the data
 biolume_df = pd.read_csv('All - All.csv')
+
+# Ensure 'Order Date' is in the correct datetime format
 biolume_df['Order Date'] = pd.to_datetime(biolume_df['Order Date'], format='%d-%m-%Y', errors='coerce')
 
 # Function to generate the sales report
@@ -15,6 +17,7 @@ def generate_sales_report(employee_name):
         return
 
     # Extract the year-month for easier grouping
+    filtered_df = filtered_df.copy()  # Avoid SettingWithCopyWarning
     filtered_df['Year-Month'] = filtered_df['Order Date'].dt.to_period('M')
 
     # Find the first order date (month) for each shop
